@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant Query</title>
+</head>
+<body>
+    <h1>AI Assistant Query</h1>
+    <form method="POST">
+        <label for="query">Query:</label>
+        <input type="text" id="query" name="query" required><br><br>
+
+        <label for="role">Role:</label>
+        <input type="text" id="role" name="role" required><br><br>
+
+        <label for="user">User:</label>
+        <input type="text" id="user" name="user" required><br><br>
+
+        <label for="account">Account:</label>
+        <input type="text" id="account" name="account" required><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    {% if result %}
+        <h2>Result:</h2>
+        <pre>{{ result }}</pre>
+    {% endif %}
+</body>
+</html>

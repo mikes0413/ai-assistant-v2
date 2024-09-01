@@ -1,19 +1,16 @@
 import argparse
 import os
 import shutil
-from langchain.document_loaders.pdf import PyPDFDirectoryLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.schema.document import Document
+from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.schema import Document
 from get_embedding_function import get_embedding_function
-from langchain.vectorstores.chroma import Chroma
-
+from langchain_community.vectorstores import Chroma
 
 CHROMA_PATH = "chroma"
 DATA_PATH = "data"
 
-
 def main():
-
     # Check if the database should be cleared (using the --clear flag).
     parser = argparse.ArgumentParser()
     parser.add_argument("--reset", action="store_true", help="Reset the database.")
@@ -27,21 +24,29 @@ def main():
     chunks = split_documents(documents)
     add_to_chroma(chunks)
 
-
 def load_documents():
     document_loader = PyPDFDirectoryLoader(DATA_PATH)
-    return document_loader.load()
+    documents = document_loader.load()
 
+    for doc in documents:
+        # Extract role or account from the file path.
+        path_parts = doc.metadata["source"].split(os.sep)
+        print(path_parts)
+        if "Roles" in path_parts:
+            role = path_parts[path_parts.index("Roles") + 1]
+            doc.metadata["role"] = role
+        elif "Accounts" in path_parts:
+            account = path_parts[path_parts.index("Accounts") + 1]
+            doc.metadata["account"] = account
+
+    return documents
 
 def split_documents(documents: list[Document]):
-    text_splitter = RecursiveCharacterTextSplitter(
+    text_splitter = CharacterTextSplitter(
         chunk_size=800,
         chunk_overlap=80,
-        length_function=len,
-        is_separator_regex=False,
     )
     return text_splitter.split_documents(documents)
-
 
 def add_to_chroma(chunks: list[Document]):
     # Load the existing database.
@@ -71,12 +76,7 @@ def add_to_chroma(chunks: list[Document]):
     else:
         print("✅ No new documents to add")
 
-
 def calculate_chunk_ids(chunks):
-
-    # This will create IDs like "data/monopoly.pdf:6:2"
-    # Page Source : Page Number : Chunk Index
-
     last_page_id = None
     current_chunk_index = 0
 
@@ -100,11 +100,9 @@ def calculate_chunk_ids(chunks):
 
     return chunks
 
-
 def clear_database():
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
-
 
 if __name__ == "__main__":
     main()
